@@ -1,6 +1,7 @@
 import aiofiles
 import asyncio
 import pathlib
+import logging
 from aiohttp import web
 
 
@@ -27,7 +28,9 @@ async def archivate(request):
     )
 
     while not process.stdout.at_eof():
+        logging.debug('Sending archive chunk ...')
         await response.write(await process.stdout.read(102400))
+        await asyncio.sleep(5) # TODO: Delete after test
 
     return response
 
@@ -39,6 +42,7 @@ async def handle_index_page(request):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     app = web.Application()
     app.add_routes([
         web.get('/', handle_index_page),
