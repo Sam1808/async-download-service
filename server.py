@@ -1,9 +1,35 @@
-from aiohttp import web
 import aiofiles
+import asyncio
+import pathlib
+from aiohttp import web
 
 
 async def archivate(request):
-    raise NotImplementedError
+    folder = request.match_info.get('archive_hash')
+    files_dir = pathlib.Path(__file__).parent.joinpath("test_photos").joinpath(folder).absolute()
+    exceptions = '.' or '..' or None
+    if not files_dir.is_dir() or folder == exceptions:
+        raise web.HTTPNotFound(
+            text=f"Error 404. Cannot create archive from '{folder}'.  Maybe folder does not exist or has been deleted."
+        )
+
+    response = web.StreamResponse()
+    response.headers['Content-Type'] = 'application/zip'
+    response.headers['Content-Disposition'] = f"attachment;  filename = {folder}.zip"
+    await response.prepare(request)
+
+    zip_command = ('zip', '-r', '-', '.')
+    process = await asyncio.create_subprocess_exec(
+        *zip_command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        cwd=files_dir
+    )
+
+    while not process.stdout.at_eof():
+        await response.write(await process.stdout.read(102400))
+
+    return response
 
 
 async def handle_index_page(request):
