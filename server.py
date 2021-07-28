@@ -31,9 +31,17 @@ async def archivate(request):
         while not process.stdout.at_eof():
             logging.debug('Sending archive chunk ...')
             await response.write(await process.stdout.read(102400))
-            await asyncio.sleep(5) # TODO: Delete after test
-    except asyncio.CancelledError:
+            await asyncio.sleep(1)
+
+    except (asyncio.CancelledError, ConnectionResetError, KeyboardInterrupt, SystemExit):
         logging.debug('Download was interrupted')
+        await process.communicate()
+        if process.returncode is None or process.returncode:
+            try:
+                process.kill()
+            except ProcessLookupError:
+                logging.debug(f'Cannot find process {process.pid}. Maybe it has been deleted.')
+        logging.debug(f'Process {process.pid} has been deleted.')
         raise
 
     return response
