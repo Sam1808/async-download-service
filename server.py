@@ -27,10 +27,14 @@ async def archivate(request):
         cwd=files_dir
     )
 
-    while not process.stdout.at_eof():
-        logging.debug('Sending archive chunk ...')
-        await response.write(await process.stdout.read(102400))
-        await asyncio.sleep(5) # TODO: Delete after test
+    try:
+        while not process.stdout.at_eof():
+            logging.debug('Sending archive chunk ...')
+            await response.write(await process.stdout.read(102400))
+            await asyncio.sleep(5) # TODO: Delete after test
+    except asyncio.CancelledError:
+        logging.debug('Download was interrupted')
+        raise
 
     return response
 
