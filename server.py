@@ -7,7 +7,6 @@ import pathlib
 from aiohttp import web
 from environs import Env
 
-
 async def archivate(request):
     photo_dir = env('PHOTO_DIR')
     if args.photo_dir:
@@ -23,8 +22,8 @@ async def archivate(request):
 
     folder = request.match_info.get('archive_hash')
     files_dir = pathlib.Path(__file__).parent.joinpath(photo_dir).joinpath(folder).absolute()
-    exceptions = '.' or '..' or None
-    if not files_dir.is_dir() or folder == exceptions:
+
+    if not files_dir.is_dir() or folder == '.' or folder == '..' or folder is None:
         raise web.HTTPNotFound(
             text=f"""
             Error 404. Cannot create archive from '{folder}' in '{photo_dir}' folder.
