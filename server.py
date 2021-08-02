@@ -6,19 +6,9 @@ import pathlib
 
 from aiohttp import web
 from environs import Env
+from functools import partial
 
-async def archivate(request):
-    photo_dir = env('PHOTO_DIR')
-    if args.photo_dir:
-        photo_dir = args.photo_dir
-
-    delay = env.int('DELAY')
-    if args.delay:
-        delay = args.delay
-
-    file_fragment = env.int('KBYTES') * 1024
-    if args.fragment:
-        file_fragment = args.fragment * 1024
+async def archivate(request, photo_dir: str, delay: int,  file_fragment: int):
 
     folder = request.match_info.get('archive_hash')
     files_dir = pathlib.Path(__file__).parent.joinpath(photo_dir).joinpath(folder).absolute()
@@ -87,9 +77,16 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(level=env.log_level('LOG_LEVEL'))
 
+    photo_dir = args.photo_dir or env('PHOTO_DIR')
+    delay = args.delay or env.int('DELAY')
+    file_fragment = args.fragment or env.int('KBYTES')
+    file_fragment *= 1024
+
+    partial_archiving = partial(archivate, photo_dir=photo_dir, delay=delay, file_fragment=file_fragment)
+
     app = web.Application()
     app.add_routes([
         web.get('/', handle_index_page),
-        web.get('/archive/{archive_hash}/', archivate),
+        web.get('/archive/{archive_hash}/', partial_archiving),
     ])
     web.run_app(app)
