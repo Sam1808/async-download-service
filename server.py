@@ -12,8 +12,8 @@ async def archivate(request, photo_dir: str, delay: int,  file_fragment: int):
 
     folder = request.match_info.get('archive_hash')
     files_dir = pathlib.Path(__file__).parent.joinpath(photo_dir).joinpath(folder).absolute()
-
-    if not files_dir.is_dir() or folder == '.' or folder == '..' or folder is None:
+    exceptions = ['.', '..', None]
+    if not files_dir.is_dir() or folder in exceptions:
         raise web.HTTPNotFound(
             text=f"""
             Error 404. Cannot create archive from '{folder}' in '{photo_dir}' folder.
