@@ -8,6 +8,7 @@ from aiohttp import web
 from environs import Env
 from functools import partial
 
+
 async def archivate(request, photo_dir: str, delay: int,  file_fragment: int):
 
     folder = request.match_info['archive_hash']
