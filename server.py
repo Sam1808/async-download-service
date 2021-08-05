@@ -10,7 +10,7 @@ from functools import partial
 
 async def archivate(request, photo_dir: str, delay: int,  file_fragment: int):
 
-    folder = request.match_info.get('archive_hash')
+    folder = request.match_info['archive_hash']
     files_dir = pathlib.Path(__file__).parent.joinpath(photo_dir).joinpath(folder).absolute()
     exceptions = ['.', '..', None]
     if not files_dir.is_dir() or folder in exceptions:
